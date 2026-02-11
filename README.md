@@ -240,6 +240,56 @@ The injected account appears in the "Teachers" list and is fully operational.
 
 ---
 
+---
+
+## Vulnerability 3: Unauthenticated Arbitrary Account Deletion (DoS)
+**Severity**: 🔥 **Critical (CVSS ~8.2)** | **Component**: `/admin/core/drop_user.php` | **CWE-284**
+
+### 🔍 Technical Analysis
+The file `srms/script/admin/core/drop_user.php` is designed to delete staff accounts from the database. Critical analysis reveals that this file **completely lacks session validation or access control mechanisms** (e.g., `check_session.php` is missing).
+
+The script accepts an `id` parameter via a GET request and executes a `DELETE` query against the `tbl_staff` table. Since the **Super Administrator** account is also stored in this table (typically assigned `ID=1`), an unauthenticated attacker can permanently delete the administrator account, causing a permanent **Denial of Service (DoS)** condition.
+
+**Vulnerable Code Snippet:**
+```php
+// srms/script/admin/core/drop_user.php
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $id = $_GET['id'];
+    
+    // 🚨 CRITICAL VULNERABILITY: 
+    // Direct database deletion without verifying if the user is logged in or is an Admin.
+    $stmt = $conn->prepare("DELETE FROM tbl_staff WHERE id = ?");
+    $stmt->execute([$id]);
+
+    // Developer Error: The success message incorrectly says "Academic deleted" 
+    // because the code was likely copy-pasted from 'drop_academic.php'.
+    $_SESSION['reply'] = array (array("success",'Academic deleted successfully'));
+    header("location:../academic");
+}
+```
+
+### ⚔️ Proof of Concept (Exploit)
+
+**Attack Scenario:**
+An attacker wants to sabotage the system by removing the main administrator.
+
+**Exploit URL:**
+```text
+http://localhost/srms/script/admin/core/drop_user.php?id=1
+```
+
+**Step 1: Execution**
+The attacker navigates to the exploit URL in a browser or uses cURL.
+
+**Step 2: Verification (The "Smoking Gun")**
+The application redirects the user and displays a success message: **"Academic deleted successfully"**.
+*Note: The message says "Academic" due to a coding error by the developer, but the SQL query `DELETE FROM tbl_staff` has successfully executed against the user table.*
+
+<img width="2552" height="1529" alt="16903606e1d51d9694dad9acfc3c2d6d" src="https://github.com/user-attachments/assets/b4408cef-bd1a-42a7-9a96-e621d5567167" />
+> *Figure 5: The "Academic deleted successfully" message confirms the Admin account (ID 1) has been wiped from the database without authentication.*
+
+---
+
 ## 🛡️ Remediation Strategy
 
 To mitigate these vulnerabilities, the vendor must enforce strict **Session-Based Access Control** at the beginning of all administrative scripts.
